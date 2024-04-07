@@ -1,13 +1,13 @@
-import express from 'express';
+import express from "express";
 
 const courseGoals = [];
 
 const app = express();
 
 app.use(express.urlencoded({ extended: false }));
-app.use(express.static('public'));
+app.use(express.static("public"));
 
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
   res.send(`
   <!DOCTYPE html>
   <html lang="en">
@@ -36,14 +36,16 @@ app.get('/', (req, res) => {
         </section>
         <section>
           <ul id="goals">
-          ${courseGoals.map(
-            (goal, index) => `
-            <li id="goal-${index}">
-              <span>${goal}</span>
-              <button>Remove</button>
+          ${courseGoals
+            .map(
+              (goal) => `
+            <li id="goal-${goal.id}">
+              <span>${goal.text}</span>
+              <button hx-delete="/goals/${goal.id}" hx-target="#goal-${goal.id}" hx-swap="outerHTML">Remove</button>
             </li>
           `
-          ).join('')}
+            )
+            .join("")}
           </ul>
         </section>
       </main>
@@ -52,16 +54,25 @@ app.get('/', (req, res) => {
   `);
 });
 
-app.post('/goals', (req, res) => {
+app.post("/goals", (req, res) => {
   const goalText = req.body.goal;
-  courseGoals.push(goalText);
+  const id = new Date().getTime().toString();
+  courseGoals.push({ text: goalText, id: id });
   // res.redirect('/');
+  const index = courseGoals.length - 1;
   res.send(`
-    <li id="goal-${courseGoals.length - 1}">
+    <li id="goal-${id}">
       <span>${goalText}</span>
-      <button>Remove</button>
+      <button hx-delete="/goals/${id}" hx-target="#goal-${id}" hx-swap="outerHTML">Remove</button>
     </li>
   `);
+});
+
+app.delete("/goals/:idx", (req, res) => {
+  const id = req.params.id;
+  const index = courseGoals.findIndex((goal) => goal.id === id);
+  courseGoals.splice(index, 1);
+  res.send();
 });
 
 app.listen(3000);
